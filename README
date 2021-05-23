@@ -1,0 +1,9 @@
+Autotools project README file
+
+See http://nRF24.github.io/RF24
+
+./autogen.sh
+./configure --sysconfdir=/etc
+make
+sudo make install
+sudo update-rc.d nf24pi defaults
