@@ -7,7 +7,7 @@
 #include <chrono>
 #include <syslog.h>
 
-#if HAVE_RF24_RF24_H
+#if HAVE_LIBRF24
 # include <RF24/RF24.h> // RF24, RF24_PA_LOW, delay()
 #endif
 

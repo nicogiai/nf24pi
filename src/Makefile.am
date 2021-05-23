@@ -1,3 +1,7 @@
+if INCLUDE_LIBRF24
+RF24_LIB=-lrf24
+endif
+
 bin_PROGRAMS = rf24pi
 
 rf24pi_SOURCES = main.cpp loop.cpp loop.hpp
