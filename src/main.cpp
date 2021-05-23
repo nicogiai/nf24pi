@@ -90,9 +90,17 @@ int main(int argc, char** argv)
 
 	Loop l;
 
-	if(l.start()!=0)
+	try
 	{
-		syslog (LOG_ERR, "Failed to start rf24pi!");
+		if(l.start()!=0)
+		{
+			syslog (LOG_ERR, "Failed to start rf24pi!");
+			exit(EXIT_FAILURE);
+		}
+	}
+	catch (const std::runtime_error& error)
+	{
+		syslog (LOG_ERR, "only root can execute this");
 		exit(EXIT_FAILURE);
 	}
 
