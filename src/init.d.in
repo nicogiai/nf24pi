@@ -10,10 +10,6 @@
 #                    running at jobs.
 ### END INIT INFO
    
-[ -f /etc/default/@PACKAGE@ ] && . /etc/default/@PACKAGE@
-if [ -z "$exec_prefix" ] ;  then
-	echo "exec_prefix is not set, please set it in /etc/default/@PACKAGE@ >&2
-	exit 1
-fi
-
 DAEMON=@bindir@/@PACKAGE@
+NAME=@PACKAGE@
+PIDFILE=@PACKAGE@.pid

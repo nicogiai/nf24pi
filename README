@@ -2,6 +2,11 @@ Autotools project README file
 
 See http://nRF24.github.io/RF24
 
+pre-requisites
+sudo apt install autotools-dev autoconf libtool
+
+
+
 ./autogen.sh
 ./configure --sysconfdir=/etc
 make
