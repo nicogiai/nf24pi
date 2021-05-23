@@ -1,6 +1,8 @@
 bin_PROGRAMS = rf24pi
 
-rf24pi_SOURCES = rf24pi.cpp
+rf24pi_SOURCES = main.cpp loop.cpp loop.hpp
+
+rf24pi_LDADD = -lpthread
 
 default_datadir = ${sysconfdir}/default
 default_data_DATA = default/${PACKAGE}
