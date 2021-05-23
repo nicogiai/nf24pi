@@ -8,7 +8,7 @@ int Loop::start()
 	//do init RF
 #if HAVE_LIBRF24
 	radio_ = new RF24(22, 0);
-	if (!radio_.begin()) {
+	if (!radio_->begin()) {
 		return 1;
 	}
 
@@ -23,18 +23,18 @@ int Loop::start()
 
     // save on transmission time by setting the radio to only transmit the
     // number of bytes we need to transmit a float
-    radio_.setPayloadSize(sizeof(payload)); // float datatype occupies 4 bytes
+    radio_->setPayloadSize(sizeof(payload)); // float datatype occupies 4 bytes
 
     // Set the PA Level low to try preventing power supply related problems
     // because these examples are likely run with nodes in close proximity to
     // each other.
-    radio_.setPALevel(RF24_PA_LOW); // RF24_PA_MAX is default.
+    radio_->setPALevel(RF24_PA_LOW); // RF24_PA_MAX is default.
 
     // set the TX address of the RX node into the TX pipe
     //radio.openWritingPipe(address[radioNumber]);     // always uses pipe 0
 
     // set the RX address of the TX node into a RX pipe
-    radio_.openReadingPipe(1, address[!radioNumber]); // using pipe 1
+    radio_->openReadingPipe(1, address[!radioNumber]); // using pipe 1
     syslog (LOG_INFO, "listening on %s",address[!radioNumber]);
 
 #endif
@@ -62,17 +62,17 @@ void Loop::loop()
 
 #if HAVE_LIBRF24
 	uint8_t pipe;
-	radio_.startListening();                                  // put radio in RX mode
+	radio_->startListening();                                  // put radio in RX mode
 #endif
 
 	while(run_)
 	{
 #if HAVE_LIBRF24
-		if (radio_.available(&pipe)) {                        // is there a payload? get the pipe number that recieved it
-			uint8_t bytes = radio_.getPayloadSize();          // get the size of the payload
+		if (radio_->available(&pipe)) {                        // is there a payload? get the pipe number that recieved it
+			uint8_t bytes = radio_->getPayloadSize();          // get the size of the payload
 			uint8_t bpayload[bytes];
 
-			radio_.read(bpayload, bytes);                     // fetch payload from FIFO
+			radio_->read(bpayload, bytes);                     // fetch payload from FIFO
 			syslog (LOG_INFO, "bytes received %d",bytes);
 
 			//cout << "Received " << (unsigned int)bytes;      // print the size of the payload
@@ -90,7 +90,7 @@ void Loop::loop()
 	}
 
 #if HAVE_LIBRF24
-	radio_.stopListening();
+	radio_->stopListening();
 #endif
 
 	syslog (LOG_INFO, "loop deinit");
