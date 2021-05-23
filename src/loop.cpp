@@ -31,7 +31,7 @@ int Loop::start()
     radio_->setPALevel(RF24_PA_LOW); // RF24_PA_MAX is default.
 
     // set the TX address of the RX node into the TX pipe
-    //radio.openWritingPipe(address[radioNumber]);     // always uses pipe 0
+    radio_->openWritingPipe(address[radioNumber]);     // always uses pipe 0
 
     // set the RX address of the TX node into a RX pipe
     radio_->openReadingPipe(1, address[!radioNumber]); // using pipe 1
