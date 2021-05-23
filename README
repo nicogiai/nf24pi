@@ -8,7 +8,7 @@ sudo apt install autotools-dev autoconf libtool
 
 
 ./autogen.sh
-./configure --sysconfdir=/etc
+./configure --sysconfdir=/etc --with-rf24
 make
 sudo make install
 sudo update-rc.d rf24pi defaults

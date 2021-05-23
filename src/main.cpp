@@ -23,7 +23,7 @@ void signal_handler(int sig)
     }
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
     struct sigaction newSigAction;
     sigset_t newSigSet;
