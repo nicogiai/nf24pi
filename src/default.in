@@ -1,5 +1,2 @@
 # Defaults for @PACKAGE@
 
-prefix=@prefix@
-exec_prefix=${prefix}
-bindir=$(exec_prefix)/bin
