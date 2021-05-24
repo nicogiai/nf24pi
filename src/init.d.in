@@ -10,6 +10,6 @@
 #                    running at jobs.
 ### END INIT INFO
    
-DAEMON=@bindir@/@PACKAGE@
+DAEMON=@prefix@/bin/@PACKAGE@
 NAME=@PACKAGE@
-PIDFILE=@PACKAGE@.pid
+#DAEMON_ARGS
