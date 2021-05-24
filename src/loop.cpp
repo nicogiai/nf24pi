@@ -23,7 +23,7 @@ int Loop::start()
 
     // save on transmission time by setting the radio to only transmit the
     // number of bytes we need to transmit a float
-    radio_->setPayloadSize(sizeof(payload)); // float datatype occupies 4 bytes
+    radio_->setPayloadSize(sizeof(payload)); // float datatype occupies 8 bytes (temp + humidity)
 
     // Set the PA Level low to try preventing power supply related problems
     // because these examples are likely run with nodes in close proximity to
@@ -73,7 +73,7 @@ void Loop::loop()
 			uint8_t bpayload[bytes];
 
 			radio_->read(bpayload, bytes);                     // fetch payload from FIFO
-			syslog (LOG_INFO, "bytes received %d",bytes);
+			//syslog (LOG_INFO, "bytes received %d",bytes);
 
 			//cout << "Received " << (unsigned int)bytes;      // print the size of the payload
 			//cout << " bytes on pipe " << (unsigned int)pipe; // print the pipe number

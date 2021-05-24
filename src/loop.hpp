@@ -25,7 +25,7 @@ class Loop {
 	private:
 		std::thread thread_;
 		bool run_;
-		float payload;
+		float payload[2];
 #if HAVE_LIBRF24
 		RF24 *radio_;
 #endif
