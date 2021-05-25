@@ -29,6 +29,7 @@ class Loop {
 #if HAVE_LIBRF24
 		RF24 *radio_;
 #endif
+		struct mosquitto *mosq;
 	private:
 		void loop();
 };

@@ -25,6 +25,7 @@ void signal_handler(int sig)
         case SIGINT:
         case SIGTERM:
             exitdaemon = true;
+            syslog (LOG_INFO, "signal");
             break;
     }
 }
@@ -72,7 +73,9 @@ int main(int argc, char** argv)
 	/* Open any logs here */
     try
     {
-        auto logger = spdlog::basic_logger_mt(PACKAGE_NAME, "/tmp/basic-log.txt");
+        auto logger = spdlog::basic_logger_mt(PACKAGE_NAME, "/tmp/rf24pi.log");
+        //spdlog::register_logger(logger);
+        spdlog::flush_every(std::chrono::seconds(3));
     }
     catch (const spdlog::spdlog_ex &ex)
     {
@@ -108,17 +111,17 @@ int main(int argc, char** argv)
 	{
 		if(l.start()!=0)
 		{
-			syslog (LOG_ERR, "Failed to start rf24pi!");
+			spdlog::get(PACKAGE_NAME)->error("Failed to start rf24pi!");
 			exit(EXIT_FAILURE);
 		}
 	}
 	catch (const std::runtime_error& error)
 	{
-		syslog (LOG_ERR, "only root can execute this");
+		spdlog::get(PACKAGE_NAME)->error("not root");
 		exit(EXIT_FAILURE);
 	}
 
-	syslog (LOG_INFO, "Start rf24pi!");
+	syslog (LOG_INFO, "start");
 
 	/* Block */
 	while (!exitdaemon) {
@@ -127,7 +130,7 @@ int main(int argc, char** argv)
 	}
 	l.stop();
 
-	syslog (LOG_INFO, "Stop rf24pi!");
+	syslog (LOG_INFO, "stop");
 
 	exit(EXIT_SUCCESS);
 }

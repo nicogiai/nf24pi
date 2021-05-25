@@ -3,6 +3,8 @@
 #include <chrono>
 #include <syslog.h>
 #include <spdlog/spdlog.h>
+//#include <mosquittopp.h>
+#include <mosquitto.h>
 
 int Loop::start()
 {
@@ -36,7 +38,8 @@ int Loop::start()
 
     // set the RX address of the TX node into a RX pipe
     radio_->openReadingPipe(1, address[!radioNumber]); // using pipe 1
-    syslog (LOG_INFO, "listening on %s",address[!radioNumber]);
+
+    spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[!radioNumber]));
 
 #endif
 
@@ -59,8 +62,6 @@ void Loop::stop()
 
 void Loop::loop()
 {
-	syslog (LOG_INFO, "loop init");
-
 #if HAVE_LIBRF24
 	uint8_t pipe;
 	radio_->startListening();                                  // put radio in RX mode
@@ -68,20 +69,35 @@ void Loop::loop()
 
 	auto logger = spdlog::get(PACKAGE_NAME);
 
+	mosq = mosquitto_new(NULL, true, NULL);
+	if(mosquitto_connect(mosq, "127.0.0.1", 1883, 60)){
+		logger->critical("Unable to connect mosquitto broker");
+		exit(1);
+	}
+	int loop = mosquitto_loop_start(mosq);
+	if(loop != MOSQ_ERR_SUCCESS){
+		logger->critical("Unable to start mosquitto loop");
+		exit(1);
+	}
+	std::string temp_str;
+	std::string humidity_str;
+
 	while(run_)
 	{
 #if HAVE_LIBRF24
 		if (radio_->available(&pipe)) {                        // is there a payload? get the pipe number that recieved it
 			uint8_t bytes = radio_->getPayloadSize();          // get the size of the payload
-			uint8_t bpayload[bytes];
-
-			radio_->read(bpayload, bytes);                     // fetch payload from FIFO
-			//syslog (LOG_INFO, "bytes received %d",bytes);
-
+			radio_->read(payload, bytes);                     // fetch payload from FIFO
 			//cout << "Received " << (unsigned int)bytes;      // print the size of the payload
 			//cout << " bytes on pipe " << (unsigned int)pipe; // print the pipe number
 			//cout << ": " << payload << endl;                 // print the payload's value
-			logger->info("temp {} humidity {}", bpayload[0], bpayload[1]); // log data
+			logger->debug("pipe {}: temp {} ºC, humidity {} %", (unsigned int)pipe, payload[0], payload[1]); // log data
+
+			temp_str = std::to_string(payload[0]);
+			mosquitto_publish(mosq, NULL, "dht22/temp", temp_str.size(), temp_str.c_str(), 0, 0);
+
+			humidity_str = std::to_string(payload[1]);
+			mosquitto_publish(mosq, NULL, "dht22/humidity", humidity_str.size(), humidity_str.c_str(), 0, 0);
 		}
 		else
 		{
@@ -96,6 +112,7 @@ void Loop::loop()
 	radio_->stopListening();
 #endif
 
-	syslog (LOG_INFO, "loop deinit");
+	mosquitto_disconnect(mosq);
+	mosquitto_loop_stop(mosq,false);
 
 }

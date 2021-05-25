@@ -4,7 +4,7 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CXX
 
-AC_CHECK_HEADERS([spdlog/spdlog.h])
+#AC_CHECK_HEADERS([spdlog/spdlog.h])
 
 AC_ARG_WITH(rf24, AC_HELP_STRING(
 	[--with-rf24],
@@ -19,6 +19,7 @@ AC_ARG_WITH(rf24, AC_HELP_STRING(
 AM_CONDITIONAL(INCLUDE_LIBRF24, test "$rf24" = 'yes' )
                          
 AC_SEARCH_LIBS([pthread_create], [pthread])
+AC_CHECK_LIB([mosquitto],[main])
 
 AC_CONFIG_FILES([
  Makefile

@@ -3,7 +3,7 @@ El SW ejecuta en una Raspberry Pi Zero como servicio de SO.
 
 
 # pre-requisites
-sudo apt install autotools-dev autoconf libtool libspdlog-dev
+sudo apt install autotools-dev autoconf libtool libspdlog-dev libmosquitto-dev
 librf24 (See http://nRF24.github.io/RF24)
 
 # How to build
