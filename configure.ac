@@ -4,6 +4,8 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CXX
 
+AC_CHECK_HEADERS([spdlog/spdlog.h])
+
 AC_ARG_WITH(rf24, AC_HELP_STRING(
 	[--with-rf24],
 	[include deprectated features that are on the chopping block]

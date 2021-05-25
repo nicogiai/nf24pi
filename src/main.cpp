@@ -9,6 +9,12 @@
 #include <string.h>
 #include <signal.h>
 #include <loop.hpp>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 bool exitdaemon = false;
 
@@ -64,6 +70,14 @@ int main(int argc, char** argv)
 	umask(0);
 
 	/* Open any logs here */
+    try
+    {
+        auto logger = spdlog::basic_logger_mt(PACKAGE_NAME, "/tmp/basic-log.txt");
+    }
+    catch (const spdlog::spdlog_ex &ex)
+    {
+        syslog (LOG_ERR, "Log init failed: %s",ex.what());
+    }
 
 	/* Create a new SID for the child process */
 	sid = setsid();

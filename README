@@ -1,17 +1,20 @@
-Autotools project README file
-
-See http://nRF24.github.io/RF24
-
-pre-requisites
-sudo apt install autotools-dev autoconf libtool
+Utiliza una interface NRF24L01 para recibir temperatura y humedad de sensores DHT22.
+El SW ejecuta en una Raspberry Pi Zero como servicio de SO. 
 
 
+# pre-requisites
+sudo apt install autotools-dev autoconf libtool libspdlog-dev
+librf24 (See http://nRF24.github.io/RF24)
 
+# How to build
 ./autogen.sh
-./configure --sysconfdir=/etc --with-rf24
+./configure --with-rf24
 make
+
+# How to install
 sudo make install
 sudo update-rc.d rf24pi defaults
+
 
 t="$(mktemp -d)"
 DESTDIR="$t" make install

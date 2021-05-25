@@ -2,6 +2,7 @@
 #include <syslog.h>
 #include <chrono>
 #include <syslog.h>
+#include <spdlog/spdlog.h>
 
 int Loop::start()
 {
@@ -65,6 +66,8 @@ void Loop::loop()
 	radio_->startListening();                                  // put radio in RX mode
 #endif
 
+	auto logger = spdlog::get(PACKAGE_NAME);
+
 	while(run_)
 	{
 #if HAVE_LIBRF24
@@ -78,7 +81,7 @@ void Loop::loop()
 			//cout << "Received " << (unsigned int)bytes;      // print the size of the payload
 			//cout << " bytes on pipe " << (unsigned int)pipe; // print the pipe number
 			//cout << ": " << payload << endl;                 // print the payload's value
-
+			logger->info("temp {} humidity {}", bpayload[0], bpayload[1]); // log data
 		}
 		else
 		{
