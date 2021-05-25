@@ -39,8 +39,9 @@ int Loop::start()
     // set the RX address of the TX node into a RX pipe
     radio_->openReadingPipe(1, address[!radioNumber]); // using pipe 1
 
-    spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[!radioNumber]));
-
+    spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[!radioNumber]);
+#else
+    spdlog::get(PACKAGE_NAME)->warn("librf24 not present!");
 #endif
 
 	//start thread
@@ -79,6 +80,8 @@ void Loop::loop()
 		logger->critical("Unable to start mosquitto loop");
 		exit(1);
 	}
+
+	float payload[2];
 	std::string temp_str;
 	std::string humidity_str;
 

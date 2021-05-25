@@ -9,6 +9,7 @@
 #include <string.h>
 #include <signal.h>
 #include <loop.hpp>
+
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
