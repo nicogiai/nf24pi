@@ -109,12 +109,12 @@ void Loop::loop()
 
 			//form1 mensaje de temperatura y publica
 			temp_topic_str = string_format("sensor/%d/temperature", pipe);
-			temp_str = string_format("%.1f", payload[0]));
+			temp_str = string_format("%.1f", payload[0]);
 			mosquitto_publish(mosq, NULL, temp_topic_str.c_str(), temp_str.size(), temp_str.c_str(), 0, 0);
 
 			//form1 mensaje de humedad y publica
 			humidity_topic_str = string_format("sensor/%d/humidity", pipe);
-			humidity_str = string_format("%.1f", payload[1]));
+			humidity_str = string_format("%.1f", payload[1]);
 			mosquitto_publish(mosq, NULL, humidity_topic_str.c_str(), humidity_str.size(), humidity_str.c_str(), 0, 0);
 		}
 		else
