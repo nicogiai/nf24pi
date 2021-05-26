@@ -35,10 +35,11 @@ void Loop::loop()
 
 #if HAVE_LIBRF24
 	RF24 *radio_ = new RF24(22, 0);
+	uint8_t pipe;
 
 	try
 	{
-		radio_->begin()
+		radio_->begin();
 
 		// to use different addresses on a pair of radios, we need a variable to
 		// uniquely identify which address this radio will use to transmit
@@ -66,8 +67,8 @@ void Loop::loop()
 
 		spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[!radioNumber]);
 
-		uint8_t pipe;
-		radio_->startListening();
+
+		radio_->startListening(); // put radio in RX mode
 
 	}
 	catch (const std::runtime_error& error)
@@ -77,7 +78,6 @@ void Loop::loop()
 		std::raise(SIGTERM); //error critico.termina la ejecucion del programa
 		return;
 	}
-                               // put radio in RX mode
 #else
 	spdlog::get(PACKAGE_NAME)->warn("librf24 not present!");
 #endif
