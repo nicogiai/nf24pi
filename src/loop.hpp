@@ -7,15 +7,6 @@
 #ifndef SRC_LOOP_HPP_
 #define SRC_LOOP_HPP_
 
-#if HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-
-#if HAVE_LIBRF24
-# include <RF24/RF24.h> // RF24, RF24_PA_LOW, delay()
-#endif
-
 #include <thread>         // std::thread
 #include <memory>
 #include <string>
@@ -34,14 +25,11 @@ std::string string_format( const std::string& format, Args ... args )
 
 class Loop {
 	public:
-		int start();
+		void start();
 		void stop();
 	private:
 		std::thread thread_;
 		bool run_;
-#if HAVE_LIBRF24
-		RF24 *radio_;
-#endif
 		struct mosquitto *mosq;
 	private:
 		void loop();

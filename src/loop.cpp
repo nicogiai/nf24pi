@@ -1,5 +1,14 @@
 #include "loop.hpp"
 
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+
+#if HAVE_LIBRF24
+# include <RF24/RF24.h> // RF24, RF24_PA_LOW, delay()
+#endif
+
 #include <chrono>
 #include <spdlog/spdlog.h>
 #include <mosquitto.h>
@@ -7,66 +16,70 @@
 #include <cstdio>
 
 
-int Loop::start()
+void Loop::start()
 {
-	//do init RF
-#if HAVE_LIBRF24
-	radio_ = new RF24(22, 0);
-	if (!radio_->begin()) {
-		return 1;
-	}
-
-    // to use different addresses on a pair of radios, we need a variable to
-    // uniquely identify which address this radio will use to transmit
-    bool radioNumber = 1; // 0 uses address[0] to transmit, 1 uses address[1] to transmit
-
-    // Let these addresses be used for the pair
-    uint8_t address[2][6] = {"1Node", "2Node"};
-    // It is very helpful to think of an address as a path instead of as
-    // an identifying device destination
-
-    // save on transmission time by setting the radio to only transmit the
-    // number of bytes we need to transmit a float
-    radio_->setPayloadSize(sizeof(payload)); // float datatype occupies 8 bytes (temp + humidity)
-
-    // Set the PA Level low to try preventing power supply related problems
-    // because these examples are likely run with nodes in close proximity to
-    // each other.
-    radio_->setPALevel(RF24_PA_LOW); // RF24_PA_MAX is default.
-
-    // set the TX address of the RX node into the TX pipe
-    radio_->openWritingPipe(address[radioNumber]);     // always uses pipe 0
-
-    // set the RX address of the TX node into a RX pipe
-    radio_->openReadingPipe(1, address[!radioNumber]); // using pipe 1
-
-    spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[!radioNumber]);
-#else
-    spdlog::get(PACKAGE_NAME)->warn("librf24 not present!");
-#endif
-
 	//start thread
 	run_=true;
 	thread_ = std::thread(&Loop::loop, this);
-
-	return 0;
 }
 
 void Loop::stop()
 {
 	run_=false;
 	thread_.join();
-
-#if HAVE_LIBRF24
-	delete radio_;
-#endif
 }
 
 void Loop::loop()
 {
+	float payload[2];
+
 #if HAVE_LIBRF24
-	uint8_t pipe;
-	radio_->startListening();                                  // put radio in RX mode
+	RF24 *radio_ = new RF24(22, 0);
+
+	try
+	{
+		radio_->begin()
+
+		// to use different addresses on a pair of radios, we need a variable to
+		// uniquely identify which address this radio will use to transmit
+		bool radioNumber = 1; // 0 uses address[0] to transmit, 1 uses address[1] to transmit
+
+		// Let these addresses be used for the pair
+		uint8_t address[2][6] = {"1Node", "2Node"};
+		// It is very helpful to think of an address as a path instead of as
+		// an identifying device destination
+
+		// save on transmission time by setting the radio to only transmit the
+		// number of bytes we need to transmit a float
+		radio_->setPayloadSize(sizeof(payload)); // float datatype occupies 8 bytes (temp + humidity)
+
+		// Set the PA Level low to try preventing power supply related problems
+		// because these examples are likely run with nodes in close proximity to
+		// each other.
+		radio_->setPALevel(RF24_PA_LOW); // RF24_PA_MAX is default.
+
+		// set the TX address of the RX node into the TX pipe
+		radio_->openWritingPipe(address[radioNumber]);     // always uses pipe 0
+
+		// set the RX address of the TX node into a RX pipe
+		radio_->openReadingPipe(1, address[!radioNumber]); // using pipe 1
+
+		spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[!radioNumber]);
+
+		uint8_t pipe;
+		radio_->startListening();
+
+	}
+	catch (const std::runtime_error& error)
+	{
+		spdlog::get(PACKAGE_NAME)->critical("librf24 not root");
+		run_=false;
+		std::raise(SIGTERM); //error critico.termina la ejecucion del programa
+		return;
+	}
+                               // put radio in RX mode
+#else
+	spdlog::get(PACKAGE_NAME)->warn("librf24 not present!");
 #endif
 
 	auto logger = spdlog::get(PACKAGE_NAME);
@@ -77,6 +90,7 @@ void Loop::loop()
 
 		run_=false;
 		std::raise(SIGTERM); //error critico.termina la ejecucion del programa
+		return;
 	}
 
 	int loop = mosquitto_loop_start(mosq);
@@ -85,9 +99,9 @@ void Loop::loop()
 
 		run_=false;
 		std::raise(SIGTERM); //error critico.termina la ejecucion del programa
+		return;
 	}
 
-	float payload[2];
 	std::string temp_topic_str;
 	std::string temp_str;
 	std::string humidity_str;
@@ -128,6 +142,7 @@ void Loop::loop()
 
 #if HAVE_LIBRF24
 	radio_->stopListening();
+	delete radio_;
 #endif
 
 	mosquitto_disconnect(mosq);

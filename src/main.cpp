@@ -108,20 +108,7 @@ int main(int argc, char** argv)
 	spdlog::get(PACKAGE_NAME)->info("start");
 
 	Loop l;
-
-	try
-	{
-		if(l.start()!=0)
-		{
-			spdlog::get(PACKAGE_NAME)->error("Failed to start rf24pi!");
-			exit(EXIT_FAILURE);
-		}
-	}
-	catch (const std::runtime_error& error)
-	{
-		spdlog::get(PACKAGE_NAME)->error("not root");
-		exit(EXIT_FAILURE);
-	}
+	l.start();
 
 	/* Block */
 	while (!exitdaemon) {
