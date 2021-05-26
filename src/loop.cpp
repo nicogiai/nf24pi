@@ -1,10 +1,11 @@
 #include "loop.hpp"
-#include <syslog.h>
+
 #include <chrono>
-#include <syslog.h>
 #include <spdlog/spdlog.h>
-//#include <mosquittopp.h>
 #include <mosquitto.h>
+#include <csignal>
+#include <cstdio>
+
 
 int Loop::start()
 {
@@ -73,17 +74,27 @@ void Loop::loop()
 	mosq = mosquitto_new(NULL, true, NULL);
 	if(mosquitto_connect(mosq, "127.0.0.1", 1883, 60)){
 		logger->critical("Unable to connect mosquitto broker");
-		exit(1);
+
+		run_=false;
+		std::raise(SIGTERM); //error critico.termina la ejecucion del programa
 	}
+
 	int loop = mosquitto_loop_start(mosq);
 	if(loop != MOSQ_ERR_SUCCESS){
 		logger->critical("Unable to start mosquitto loop");
-		exit(1);
+
+		run_=false;
+		std::raise(SIGTERM); //error critico.termina la ejecucion del programa
 	}
 
 	float payload[2];
+	std::string temp_topic_str;
 	std::string temp_str;
 	std::string humidity_str;
+	std::string humidity_topic_str;
+
+	logger->debug("topic   example: {}", string_format("sensor/%d/temperature", 0));
+	logger->debug("message example: {}", string_format("%.1f", 1.5));
 
 	while(run_)
 	{
@@ -96,11 +107,15 @@ void Loop::loop()
 			//cout << ": " << payload << endl;                 // print the payload's value
 			logger->debug("pipe {}: temp {} ºC, humidity {} %", (unsigned int)pipe, payload[0], payload[1]); // log data
 
-			temp_str = std::to_string(payload[0]);
-			mosquitto_publish(mosq, NULL, "dht22/temp", temp_str.size(), temp_str.c_str(), 0, 0);
+			//form1 mensaje de temperatura y publica
+			temp_topic_str = string_format("sensor/%d/temperature", pipe);
+			temp_str = string_format("%.1f", payload[0]));
+			mosquitto_publish(mosq, NULL, temp_topic_str.c_str(), temp_str.size(), temp_str.c_str(), 0, 0);
 
-			humidity_str = std::to_string(payload[1]);
-			mosquitto_publish(mosq, NULL, "dht22/humidity", humidity_str.size(), humidity_str.c_str(), 0, 0);
+			//form1 mensaje de humedad y publica
+			humidity_topic_str = string_format("sensor/%d/humidity", pipe);
+			humidity_str = string_format("%.1f", payload[1]));
+			mosquitto_publish(mosq, NULL, humidity_topic_str.c_str(), humidity_str.size(), humidity_str.c_str(), 0, 0);
 		}
 		else
 		{

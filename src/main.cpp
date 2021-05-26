@@ -104,7 +104,8 @@ int main(int argc, char** argv)
 	close(STDERR_FILENO);
 
 	/* Daemon-specific initialization goes here */
-
+	syslog (LOG_INFO, "start");
+	spdlog::get(PACKAGE_NAME)->info("start");
 
 	Loop l;
 
@@ -122,8 +123,6 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	syslog (LOG_INFO, "start");
-
 	/* Block */
 	while (!exitdaemon) {
 	   /* Do some task here ... */
@@ -131,6 +130,7 @@ int main(int argc, char** argv)
 	}
 	l.stop();
 
+	spdlog::get(PACKAGE_NAME)->info("stop");
 	syslog (LOG_INFO, "stop");
 
 	exit(EXIT_SUCCESS);
