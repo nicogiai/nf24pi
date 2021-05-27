@@ -43,10 +43,10 @@ void Loop::loop()
 
 		// to use different addresses on a pair of radios, we need a variable to
 		// uniquely identify which address this radio will use to transmit
-		bool radioNumber = 1; // 0 uses address[0] to transmit, 1 uses address[1] to transmit
+		//uint8_t radioNumber = 1; // 0 uses address[0] to transmit, 1 uses address[1] to transmit
 
 		// Let these addresses be used for the pair
-		uint8_t address[2][6] = {"1Node", "2Node"};
+		uint8_t address[3][6] = {"1Node", "2Node","3Node"};
 		// It is very helpful to think of an address as a path instead of as
 		// an identifying device destination
 
@@ -60,12 +60,14 @@ void Loop::loop()
 		radio_->setPALevel(RF24_PA_LOW); // RF24_PA_MAX is default.
 
 		// set the TX address of the RX node into the TX pipe
-		radio_->openWritingPipe(address[radioNumber]);     // always uses pipe 0
+		radio_->openWritingPipe(address[2]);
 
 		// set the RX address of the TX node into a RX pipe
-		radio_->openReadingPipe(1, address[!radioNumber]); // using pipe 1
+		radio_->openReadingPipe(1, address[0]); // using pipe 1
+		radio_->openReadingPipe(2, address[1]); // using pipe 2
 
-		spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[!radioNumber]);
+		spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[0]);
+		spdlog::get(PACKAGE_NAME)->info("listening on: {}", address[1]);
 
 
 		radio_->startListening(); // put radio in RX mode
