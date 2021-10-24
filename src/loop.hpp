@@ -34,7 +34,7 @@ class Loop {
 		struct mosquitto *mosq;
 	private:
 		void loop();
-		int write_influxdb(std::string var, float value, int id);
+		int write_influxdb(std::string query);
 };
 
 

@@ -21,17 +21,17 @@
  * curl -i -XPOST 'http://localhost:8086/write?db=mydb'
 --data-binary 'cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000'
  */
-int Loop::write_influxdb(std::string var, float value, int id)
+int Loop::write_influxdb(std::string query)
 {
   CURL *curl;
   CURLcode res;
-  const auto now = std::chrono::system_clock::now();
-  auto timestamp_now = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-
-  auto format = "%s,host=raspberrypi,sensorid=%d value=%.1f %d";
-  auto size = std::snprintf(nullptr, 0, format, var, id, value, timestamp_now);
-  std::string query(size + 1, '\0');
-  std::sprintf(&query[0], format, var, id, value, timestamp_now);
+//  const auto now = std::chrono::system_clock::now();
+//  auto timestamp_now = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+//
+//  auto format = "%s,host=raspberrypi,sensorid=%d value=%.1f %d";
+//  auto size = std::snprintf(nullptr, 0, format, var, id, value, timestamp_now);
+//  std::string query(size + 1, '\0');
+//  std::sprintf(&query[0], format, var, id, value, timestamp_now);
 
   //std::ostringstream query;
   //query << var << ",host=raspberrypi,sensorid=" << id << " value=" << value << " " << timestamp_now;
@@ -168,6 +168,9 @@ void Loop::loop()
 	{
 #if HAVE_LIBRF24
 		if (radio_->available(&pipe)) {                        // is there a payload? get the pipe number that recieved it
+			const auto now = std::chrono::system_clock::now();
+			auto timestamp_now = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+
 			uint8_t bytes = radio_->getPayloadSize();          // get the size of the payload
 			radio_->read(payload, bytes);                     // fetch payload from FIFO
 			//cout << "Received " << (unsigned int)bytes;      // print the size of the payload
@@ -179,13 +182,17 @@ void Loop::loop()
 			temp_topic_str = string_format("sensor/%d/temperature", pipe);
 			temp_str = string_format("%.1f", payload[0]);
 			mosquitto_publish(mosq, NULL, temp_topic_str.c_str(), temp_str.size(), temp_str.c_str(), 0, 0);
-			write_influxdb("temperature", payload[0], (int)pipe);
+
+			std::string query_temp = string_format("temperature,host=raspberrypi,sensorid=%d value=%.1f %d", pipe, payload[0], timestamp_now);
+			write_influxdb(query_temp);
 
 			//form1 mensaje de humedad y publica
 			humidity_topic_str = string_format("sensor/%d/humidity", pipe);
 			humidity_str = string_format("%.1f", payload[1]);
 			mosquitto_publish(mosq, NULL, humidity_topic_str.c_str(), humidity_str.size(), humidity_str.c_str(), 0, 0);
-			write_influxdb("humidity", payload[1], (int)pipe);
+
+			std::string query_hum = string_format("humidity,host=raspberrypi,sensorid=%d value=%.1f %d", pipe, payload[1], timestamp_now);
+			write_influxdb(query_hum);
 		}
 		else
 		{
