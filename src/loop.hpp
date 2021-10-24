@@ -12,6 +12,7 @@
 #include <string>
 #include <stdexcept>
 
+
 template<typename ... Args>
 std::string string_format( const std::string& format, Args ... args )
 {
@@ -33,6 +34,7 @@ class Loop {
 		struct mosquitto *mosq;
 	private:
 		void loop();
+		int write_influxdb(std::string var, float value, int id);
 };
 
 

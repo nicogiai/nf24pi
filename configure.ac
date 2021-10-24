@@ -20,6 +20,7 @@ AM_CONDITIONAL(INCLUDE_LIBRF24, test "$rf24" = 'yes' )
                          
 AC_SEARCH_LIBS([pthread_create], [pthread])
 AC_CHECK_LIB([mosquitto],[main])
+AC_CHECK_LIB([curl],[main])
 
 AC_CONFIG_FILES([
  Makefile

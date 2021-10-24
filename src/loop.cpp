@@ -14,7 +14,50 @@
 #include <mosquitto.h>
 #include <csignal>
 #include <cstdio>
+#include <curl/curl.h>
 
+/*
+ * curl -i -XPOST 'http://localhost:8086/write?db=mydb'
+--data-binary 'cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000'
+ */
+int Loop::write_influxdb(std::string var, float value, int id)
+{
+  CURL *curl;
+  CURLcode res;
+  const auto now = std::chrono::system_clock::now();
+  long int timestamp_now = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+
+  std::string query_str = string_format("%s,host=raspberrypi,sensorid=%d value=%.1f %d", var,value,id,timestamp_now);
+
+
+  spdlog::get(PACKAGE_NAME)->info("query: {}", query_str);
+
+  /* In windows, this will init the winsock stuff */
+  curl_global_init(CURL_GLOBAL_ALL);
+
+  /* get a curl handle */
+  curl = curl_easy_init();
+  if(curl) {
+    /* First set the URL that is about to receive our POST. This URL can
+       just as well be a https:// URL if that is what should receive the
+       data. */
+    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8086/write?db=nf24pi");
+    /* Now specify the POST data */
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, query_str.c_str());
+
+    /* Perform the request, res will get the return code */
+    res = curl_easy_perform(curl);
+    /* Check for errors */
+    if(res != CURLE_OK) {
+      spdlog::get(PACKAGE_NAME)->critical("curl_easy_perform() failed: {}", curl_easy_strerror(res));
+    }
+
+    /* always cleanup */
+    curl_easy_cleanup(curl);
+  }
+  curl_global_cleanup();
+  return 0;
+}
 
 void Loop::start()
 {
@@ -127,11 +170,13 @@ void Loop::loop()
 			temp_topic_str = string_format("sensor/%d/temperature", pipe);
 			temp_str = string_format("%.1f", payload[0]);
 			mosquitto_publish(mosq, NULL, temp_topic_str.c_str(), temp_str.size(), temp_str.c_str(), 0, 0);
+			write_influxdb("temperature", payload[0], pipe);
 
 			//form1 mensaje de humedad y publica
 			humidity_topic_str = string_format("sensor/%d/humidity", pipe);
 			humidity_str = string_format("%.1f", payload[1]);
 			mosquitto_publish(mosq, NULL, humidity_topic_str.c_str(), humidity_str.size(), humidity_str.c_str(), 0, 0);
+			write_influxdb("humidity", payload[1], pipe);
 		}
 		else
 		{
