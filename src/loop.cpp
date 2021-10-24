@@ -28,11 +28,18 @@ int Loop::write_influxdb(std::string var, float value, int id)
   const auto now = std::chrono::system_clock::now();
   auto timestamp_now = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 
-  std::ostringstream query;
-  query << var << ",host=raspberrypi,sensorid=" << id << " value=" << value << " " << timestamp_now;
+  auto format = "%s,host=raspberrypi,sensorid=%d value=%.1f %d";
+  auto size = std::snprintf(nullptr, 0, format, var, id, value, timestamp_now);
+  std::string query(size + 1, '\0');
+  std::sprintf(&query[0], format, var, id, value, timestamp_now);
+
+  //std::ostringstream query;
+  //query << var << ",host=raspberrypi,sensorid=" << id << " value=" << value << " " << timestamp_now;
   //std::string query_str = string_format("%s,host=raspberrypi,sensorid=%d value=%.1f %d", var,value,id,timestamp_now);
 
-  spdlog::get(PACKAGE_NAME)->info("query: {}", query.str());
+  //static const char *postthis = "moo mooo moo moo";
+
+  spdlog::get(PACKAGE_NAME)->info("query: {}", query);
 
   /* In windows, this will init the winsock stuff */
   curl_global_init(CURL_GLOBAL_ALL);
@@ -45,7 +52,7 @@ int Loop::write_influxdb(std::string var, float value, int id)
        data. */
     curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8086/write?db=nf24pi");
     /* Now specify the POST data */
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, query.str().c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, query.c_str());
 
     /* Perform the request, res will get the return code */
     res = curl_easy_perform(curl);
