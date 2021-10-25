@@ -191,7 +191,7 @@ void Loop::loop()
 				temp_str = string_format("%.1f", payload[0]);
 				mosquitto_publish(mosq, NULL, temp_topic_str.c_str(), temp_str.size(), temp_str.c_str(), 0, 0);
 
-				std::string query_temp = string_format("temperature,host=raspberrypi,sensorid=%d value=%.1f %d", (unsigned int)pipe, payload[0], timestamp_now);
+				std::string query_temp = string_format("temperature,host=raspberrypi,sensorid=%d value=%.1f %lu", (unsigned int)pipe, payload[0], timestamp_now);
 				write_influxdb(query_temp);
 			}
 
@@ -203,7 +203,7 @@ void Loop::loop()
 				humidity_str = string_format("%.1f", payload[1]);
 				mosquitto_publish(mosq, NULL, humidity_topic_str.c_str(), humidity_str.size(), humidity_str.c_str(), 0, 0);
 
-				std::string query_hum = string_format("humidity,host=raspberrypi,sensorid=%d value=%.1f %d", (unsigned int)pipe, payload[1], timestamp_now);
+				std::string query_hum = string_format("humidity,host=raspberrypi,sensorid=%d value=%.1f %lu", (unsigned int)pipe, payload[1], timestamp_now);
 				write_influxdb(query_hum);
 			}
 		}
