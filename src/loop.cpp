@@ -20,6 +20,8 @@
 /*
  * curl -i -XPOST 'http://localhost:8086/write?db=mydb'
 --data-binary 'cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000'
+ *
+ * https://curl.se/libcurl/c/simplepost.html
  */
 int Loop::write_influxdb(std::string query)
 {
@@ -39,7 +41,7 @@ int Loop::write_influxdb(std::string query)
 
   //static const char *postthis = "moo mooo moo moo";
 
-  spdlog::get(PACKAGE_NAME)->info("query: {}", query);
+  spdlog::get(PACKAGE_NAME)->debug("query: {}", query);
 
   /* In windows, this will init the winsock stuff */
   curl_global_init(CURL_GLOBAL_ALL);
@@ -83,7 +85,7 @@ void Loop::stop()
 
 void Loop::loop()
 {
-	float payload[2];
+	float payload[3];
 
 #if HAVE_LIBRF24
 	RF24 *radio_ = new RF24(22, 0);
@@ -92,10 +94,6 @@ void Loop::loop()
 	try
 	{
 		radio_->begin();
-
-		// to use different addresses on a pair of radios, we need a variable to
-		// uniquely identify which address this radio will use to transmit
-		//uint8_t radioNumber = 1; // 0 uses address[0] to transmit, 1 uses address[1] to transmit
 
 		// Let these addresses be used for the pair
 		uint8_t address[3][6] = {"1Node", "2Node","3Node"};
@@ -168,6 +166,12 @@ void Loop::loop()
 	{
 #if HAVE_LIBRF24
 		if (radio_->available(&pipe)) {                        // is there a payload? get the pipe number that recieved it
+
+			//warn
+			if( ((unsigned int)pipe < 1) or ((unsigned int)pipe>2)) {
+				continue;
+			}
+
 			const auto now = std::chrono::system_clock::now();
 			auto timestamp_now = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 
@@ -179,20 +183,28 @@ void Loop::loop()
 			logger->debug("pipe {}: temp {} ºC, humidity {} %", (unsigned int)pipe, payload[0], payload[1]); // log data
 
 			//form1 mensaje de temperatura y publica
-			temp_topic_str = string_format("sensor/%d/temperature", pipe);
-			temp_str = string_format("%.1f", payload[0]);
-			mosquitto_publish(mosq, NULL, temp_topic_str.c_str(), temp_str.size(), temp_str.c_str(), 0, 0);
+			if(payload[0]>100.0) {
+				logger->error("temperature out of range: {}", string_format("%.1f", payload[0]));
+			} else {
+				temp_topic_str = string_format("sensor/%d/temperature", pipe);
+				temp_str = string_format("%.1f", payload[0]);
+				mosquitto_publish(mosq, NULL, temp_topic_str.c_str(), temp_str.size(), temp_str.c_str(), 0, 0);
 
-			std::string query_temp = string_format("temperature,host=raspberrypi,sensorid=%d value=%.1f %d", pipe, payload[0], timestamp_now);
-			write_influxdb(query_temp);
+				std::string query_temp = string_format("temperature,host=raspberrypi,sensorid=%d value=%.1f %d", (unsigned int)pipe, payload[0], timestamp_now);
+				write_influxdb(query_temp);
+			}
 
 			//form1 mensaje de humedad y publica
-			humidity_topic_str = string_format("sensor/%d/humidity", pipe);
-			humidity_str = string_format("%.1f", payload[1]);
-			mosquitto_publish(mosq, NULL, humidity_topic_str.c_str(), humidity_str.size(), humidity_str.c_str(), 0, 0);
+			if(payload[1]>100.0) {
+				logger->error("humidity out of range: {}", string_format("%.1f", payload[1]));
+			} else {
+				humidity_topic_str = string_format("sensor/%d/humidity", pipe);
+				humidity_str = string_format("%.1f", payload[1]);
+				mosquitto_publish(mosq, NULL, humidity_topic_str.c_str(), humidity_str.size(), humidity_str.c_str(), 0, 0);
 
-			std::string query_hum = string_format("humidity,host=raspberrypi,sensorid=%d value=%.1f %d", pipe, payload[1], timestamp_now);
-			write_influxdb(query_hum);
+				std::string query_hum = string_format("humidity,host=raspberrypi,sensorid=%d value=%.1f %d", (unsigned int)pipe, payload[1], timestamp_now);
+				write_influxdb(query_hum);
+			}
 		}
 		else
 		{
