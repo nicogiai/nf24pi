@@ -174,7 +174,7 @@ void Loop::loop()
 			}
 
 			const auto now = std::chrono::system_clock::now();
-			auto timestamp_now = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+			auto timestamp_now = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() * 1e9;
 
 			uint8_t bytes = radio_->getPayloadSize();          // get the size of the payload
 			radio_->read(payload, bytes);                     // fetch payload from FIFO
