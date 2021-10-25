@@ -85,7 +85,7 @@ void Loop::stop()
 
 void Loop::loop()
 {
-	float payload[3];
+	float payload[2];
 
 #if HAVE_LIBRF24
 	RF24 *radio_ = new RF24(22, 0);
@@ -110,7 +110,7 @@ void Loop::loop()
 		radio_->setPALevel(RF24_PA_LOW); // RF24_PA_MAX is default.
 
 		// set the TX address of the RX node into the TX pipe
-		radio_->openWritingPipe(address[2]);
+		// radio_->openWritingPipe(address[2]);
 
 		// set the RX address of the TX node into a RX pipe
 		radio_->openReadingPipe(1, address[0]); // using pipe 1
@@ -169,6 +169,7 @@ void Loop::loop()
 
 			//warn
 			if( ((unsigned int)pipe < 1) or ((unsigned int)pipe>2)) {
+				logger->error("pipe out of range: {}", (unsigned int)pipe);
 				continue;
 			}
 
@@ -184,7 +185,7 @@ void Loop::loop()
 
 			//form1 mensaje de temperatura y publica
 			if(payload[0]>100.0) {
-				logger->error("temperature out of range: {}", string_format("%.1f", payload[0]));
+				logger->error("sensor {} temperature out of range: {}", (unsigned int)pipe, string_format("%.1f", payload[0]));
 			} else {
 				temp_topic_str = string_format("sensor/%d/temperature", pipe);
 				temp_str = string_format("%.1f", payload[0]);
@@ -196,7 +197,7 @@ void Loop::loop()
 
 			//form1 mensaje de humedad y publica
 			if(payload[1]>100.0) {
-				logger->error("humidity out of range: {}", string_format("%.1f", payload[1]));
+				logger->error("sensor {} humidity out of range: {}", (unsigned int)pipe, string_format("%.1f", payload[1]));
 			} else {
 				humidity_topic_str = string_format("sensor/%d/humidity", pipe);
 				humidity_str = string_format("%.1f", payload[1]);
